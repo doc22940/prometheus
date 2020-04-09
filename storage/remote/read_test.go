@@ -350,7 +350,7 @@ func TestSampleAndChunkQueryableClient(t *testing.T) {
 			mint: 1, maxt: 2,
 			matchers: []*labels.Matcher{
 				labels.MustNewMatcher(labels.MatchNotEqual, "a", "something"),
-				// TODO(bwplotka): Is this what we want? I prometheus is region=europe and user requests region=us we
+				// TODO(bwplotka): Is this what we want? If prometheus is in region=europe and user requests region=us we
 				// pass through this. I would expect Prometheus to block it and return nothing / error.
 				labels.MustNewMatcher(labels.MatchEqual, "region", "us"),
 			},

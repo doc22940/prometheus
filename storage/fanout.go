@@ -78,6 +78,7 @@ func (f *fanout) Querier(ctx context.Context, mint, maxt int64) (Querier, error)
 	for _, storage := range f.secondaries {
 		querier, err := storage.Querier(ctx, mint, maxt)
 		if err != nil {
+			_ = primary.Close()
 			for _, q := range secondaries {
 				// TODO(bwplotka): Log error.
 				_ = q.Close()
@@ -100,6 +101,7 @@ func (f *fanout) ChunkQuerier(ctx context.Context, mint, maxt int64) (ChunkQueri
 	for _, storage := range f.secondaries {
 		querier, err := storage.ChunkQuerier(ctx, mint, maxt)
 		if err != nil {
+			_ = primary.Close()
 			for _, q := range secondaries {
 				// TODO(bwplotka): Log error.
 				_ = q.Close()
@@ -269,7 +271,6 @@ func NewMergeChunkQuerier(primary ChunkQuerier, secondaries []ChunkQuerier, merg
 }
 
 // Select returns a set of series that matches the given label matchers.
-// NOTE: mergeGenericQuerier selects always return series sorted no matter if sorting was not required from caller.
 func (q *mergeGenericQuerier) Select(_ bool, hints *SelectHints, matchers ...*labels.Matcher) (genericSeriesSet, Warnings, error) {
 	var (
 		seriesSets = make([]genericSeriesSet, 0, len(q.secondaries)+1)
@@ -323,6 +324,8 @@ func (q *mergeGenericQuerier) Select(_ bool, hints *SelectHints, matchers ...*la
 	if priErr != nil {
 		return nil, warnings, priErr
 	}
+
+	// NOTE: newGenericMergeSeriesSet always return series sorted.
 	return newGenericMergeSeriesSet(seriesSets, q, q.merge), warnings, nil
 }
 
