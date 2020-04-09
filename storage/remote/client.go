@@ -56,7 +56,7 @@ type ClientConfig struct {
 	HTTPClientConfig config_util.HTTPClientConfig
 }
 
-// TODO(bwplotka): Add streamed chunked remote read (add issue link).
+// TODO(bwplotka): Add streamed chunked remote read method as well (https://github.com/prometheus/prometheus/issues/5926).
 type ReadClient interface {
 	Read(ctx context.Context, query *prompb.Query) (*prompb.QueryResult, error)
 }

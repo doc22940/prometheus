@@ -68,7 +68,7 @@ func TestMergeQuerierWithChainMerger(t *testing.T) {
 			expected:      NewMockSeriesSet(),
 		},
 		{
-			name:          "many queriers with no series",
+			name:          "many secondaries with no series",
 			querierSeries: [][]Series{{}, {}, {}, {}, {}, {}, {}},
 			expected:      NewMockSeriesSet(),
 		},
@@ -84,7 +84,7 @@ func TestMergeQuerierWithChainMerger(t *testing.T) {
 			),
 		},
 		{
-			name: "2 queriers, 1 different series each",
+			name: "2 secondaries, 1 different series each",
 			querierSeries: [][]Series{{
 				NewListSeries(labels.FromStrings("bar", "baz"), []tsdbutil.Sample{sample{1, 1}, sample{2, 2}, sample{3, 3}}),
 			}, {
@@ -96,7 +96,7 @@ func TestMergeQuerierWithChainMerger(t *testing.T) {
 			),
 		},
 		{
-			name: "2 time unsorted queriers, 2 series each",
+			name: "2 time unsorted secondaries, 2 series each",
 			querierSeries: [][]Series{{
 				NewListSeries(labels.FromStrings("bar", "baz"), []tsdbutil.Sample{sample{5, 5}, sample{6, 6}}),
 				NewListSeries(labels.FromStrings("foo", "bar"), []tsdbutil.Sample{sample{0, 0}, sample{1, 1}, sample{2, 2}}),
@@ -116,7 +116,7 @@ func TestMergeQuerierWithChainMerger(t *testing.T) {
 			),
 		},
 		{
-			name: "5 queriers, only 2 queriers have 2 time unsorted series each",
+			name: "5 secondaries, only 2 secondaries have 2 time unsorted series each",
 			querierSeries: [][]Series{{}, {}, {
 				NewListSeries(labels.FromStrings("bar", "baz"), []tsdbutil.Sample{sample{5, 5}, sample{6, 6}}),
 				NewListSeries(labels.FromStrings("foo", "bar"), []tsdbutil.Sample{sample{0, 0}, sample{1, 1}, sample{2, 2}}),
@@ -136,7 +136,7 @@ func TestMergeQuerierWithChainMerger(t *testing.T) {
 			),
 		},
 		{
-			name: "2 queriers, only 2 queriers have 2 time unsorted series each, with 3 noop and one nil querier together",
+			name: "2 secondaries, only 2 secondaries have 2 time unsorted series each, with 3 noop and one nil querier together",
 			querierSeries: [][]Series{{}, {}, {
 				NewListSeries(labels.FromStrings("bar", "baz"), []tsdbutil.Sample{sample{5, 5}, sample{6, 6}}),
 				NewListSeries(labels.FromStrings("foo", "bar"), []tsdbutil.Sample{sample{0, 0}, sample{1, 1}, sample{2, 2}}),
@@ -157,7 +157,7 @@ func TestMergeQuerierWithChainMerger(t *testing.T) {
 			),
 		},
 		{
-			name: "2 queriers, with 2 series, one is overlapping",
+			name: "2 secondaries, with 2 series, one is overlapping",
 			querierSeries: [][]Series{{}, {}, {
 				NewListSeries(labels.FromStrings("bar", "baz"), []tsdbutil.Sample{sample{2, 21}, sample{3, 31}, sample{5, 5}, sample{6, 6}}),
 				NewListSeries(labels.FromStrings("foo", "bar"), []tsdbutil.Sample{sample{0, 0}, sample{1, 1}, sample{2, 2}}),
@@ -195,7 +195,7 @@ func TestMergeQuerierWithChainMerger(t *testing.T) {
 			}
 			qs = append(qs, tc.extraQueriers...)
 
-			merged, _, _ := NewMergeQuerier(qs, 0, ChainingSeriesMerge).Select(false, nil)
+			merged, _, _ := NewMergeQuerier(qs[0], qs[1:], ChainingSeriesMerge).Select(false, nil)
 			for merged.Next() {
 				testutil.Assert(t, tc.expected.Next(), "Expected Next() to be true")
 				actualSeries := merged.At()
@@ -227,7 +227,7 @@ func TestMergeChunkQuerierWithNoVerticalChunkSeriesMerger(t *testing.T) {
 			expected:         NewMockChunkSeriesSet(),
 		},
 		{
-			name:             "many queriers with no series",
+			name:             "many secondaries with no series",
 			chkQuerierSeries: [][]ChunkSeries{{}, {}, {}, {}, {}, {}, {}},
 			expected:         NewMockChunkSeriesSet(),
 		},
@@ -243,7 +243,7 @@ func TestMergeChunkQuerierWithNoVerticalChunkSeriesMerger(t *testing.T) {
 			),
 		},
 		{
-			name: "two queriers, one different series each",
+			name: "two secondaries, one different series each",
 			chkQuerierSeries: [][]ChunkSeries{{
 				NewListChunkSeriesFromSamples(labels.FromStrings("bar", "baz"), []tsdbutil.Sample{sample{1, 1}, sample{2, 2}}, []tsdbutil.Sample{sample{3, 3}}),
 			}, {
@@ -255,7 +255,7 @@ func TestMergeChunkQuerierWithNoVerticalChunkSeriesMerger(t *testing.T) {
 			),
 		},
 		{
-			name: "two queriers, two not in time order series each",
+			name: "two secondaries, two not in time order series each",
 			chkQuerierSeries: [][]ChunkSeries{{
 				NewListChunkSeriesFromSamples(labels.FromStrings("bar", "baz"), []tsdbutil.Sample{sample{5, 5}}, []tsdbutil.Sample{sample{6, 6}}),
 				NewListChunkSeriesFromSamples(labels.FromStrings("foo", "bar"), []tsdbutil.Sample{sample{0, 0}, sample{1, 1}}, []tsdbutil.Sample{sample{2, 2}}),
@@ -279,7 +279,7 @@ func TestMergeChunkQuerierWithNoVerticalChunkSeriesMerger(t *testing.T) {
 			),
 		},
 		{
-			name: "five queriers, only two have two not in time order series each",
+			name: "five secondaries, only two have two not in time order series each",
 			chkQuerierSeries: [][]ChunkSeries{{}, {}, {
 				NewListChunkSeriesFromSamples(labels.FromStrings("bar", "baz"), []tsdbutil.Sample{sample{5, 5}}, []tsdbutil.Sample{sample{6, 6}}),
 				NewListChunkSeriesFromSamples(labels.FromStrings("foo", "bar"), []tsdbutil.Sample{sample{0, 0}, sample{1, 1}}, []tsdbutil.Sample{sample{2, 2}}),
@@ -303,7 +303,7 @@ func TestMergeChunkQuerierWithNoVerticalChunkSeriesMerger(t *testing.T) {
 			),
 		},
 		{
-			name: "two queriers, with two not in time order series each, with 3 noop queries and one nil together",
+			name: "two secondaries, with two not in time order series each, with 3 noop queries and one nil together",
 			chkQuerierSeries: [][]ChunkSeries{{
 				NewListChunkSeriesFromSamples(labels.FromStrings("bar", "baz"), []tsdbutil.Sample{sample{5, 5}}, []tsdbutil.Sample{sample{6, 6}}),
 				NewListChunkSeriesFromSamples(labels.FromStrings("foo", "bar"), []tsdbutil.Sample{sample{0, 0}, sample{1, 1}}, []tsdbutil.Sample{sample{2, 2}}),
@@ -346,7 +346,7 @@ func TestMergeChunkQuerierWithNoVerticalChunkSeriesMerger(t *testing.T) {
 			}
 			qs = append(qs, tc.extraQueriers...)
 
-			merged, _, _ := NewMergeChunkQuerier(qs, 0, NewCompactingChunkSeriesMerger(nil)).Select(false, nil)
+			merged, _, _ := NewMergeChunkQuerier(qs[0], qs[1:], NewCompactingChunkSeriesMerger(nil)).Select(false, nil)
 			for merged.Next() {
 				testutil.Assert(t, tc.expected.Next(), "Expected Next() to be true")
 				actualSeries := merged.At()

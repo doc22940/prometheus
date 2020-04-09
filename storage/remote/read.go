@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/pkg/errors"
 	"github.com/prometheus/prometheus/pkg/labels"
 	"github.com/prometheus/prometheus/storage"
 )
@@ -201,14 +202,14 @@ func (q querier) addExternalLabels(ms []*labels.Matcher) ([]*labels.Matcher, lab
 
 // LabelValues implements storage.Querier and is a noop.
 func (q *querier) LabelValues(string) ([]string, storage.Warnings, error) {
-	// TODO implement?
-	return nil, nil, nil
+	// TODO: Implement: https://github.com/prometheus/prometheus/issues/3351
+	return nil, nil, errors.New("not implemented")
 }
 
 // LabelNames implements storage.Querier and is a noop.
 func (q *querier) LabelNames() ([]string, storage.Warnings, error) {
-	// TODO implement?
-	return nil, nil, nil
+	// TODO: Implement: https://github.com/prometheus/prometheus/issues/3351
+	return nil, nil, errors.New("not implemented")
 }
 
 // Close implements storage.Querier and is a noop.

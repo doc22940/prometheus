@@ -156,7 +156,7 @@ func (s *Storage) Querier(ctx context.Context, mint, maxt int64) (storage.Querie
 		}
 		queriers = append(queriers, q)
 	}
-	return storage.NewMergeQuerier(queriers, -1, storage.ChainingSeriesMerge), nil
+	return storage.NewMergeQuerier(storage.NoopQuerier(), queriers, storage.ChainingSeriesMerge), nil
 }
 
 // ChunkQuerier returns a storage.MergeQuerier combining the remote client queriers
@@ -174,7 +174,7 @@ func (s *Storage) ChunkQuerier(ctx context.Context, mint, maxt int64) (storage.C
 		}
 		queriers = append(queriers, q)
 	}
-	return storage.NewMergeChunkQuerier(queriers, -1, storage.NewCompactingChunkSeriesMerger(storage.ChainingSeriesMerge)), nil
+	return storage.NewMergeChunkQuerier(storage.NoopChunkedQuerier(), queriers, storage.NewCompactingChunkSeriesMerger(storage.ChainingSeriesMerge)), nil
 }
 
 // Appender implements storage.Storage.

@@ -15,15 +15,15 @@ package storage
 
 import (
 	"context"
-	"errors"
 
+	"testing"
+
+	"github.com/pkg/errors"
 	"github.com/prometheus/common/model"
 	"github.com/prometheus/prometheus/pkg/labels"
 	"github.com/prometheus/prometheus/storage"
 	"github.com/prometheus/prometheus/util/teststorage"
 	"github.com/prometheus/prometheus/util/testutil"
-
-	"testing"
 )
 
 func TestSelectSorted(t *testing.T) {
@@ -144,7 +144,7 @@ func TestFanoutErrors(t *testing.T) {
 		{
 			primary:   workingStorage,
 			secondary: errStorage{},
-			warnings:  storage.Warnings{errSelect},
+			warnings:  storage.Warnings{errors.Wrap(errSelect, "secondary querier's Select")},
 			err:       nil,
 		},
 		{
