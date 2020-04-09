@@ -15,7 +15,6 @@ package storage
 
 import (
 	"context"
-
 	"testing"
 
 	"github.com/pkg/errors"
@@ -138,20 +137,20 @@ func TestFanoutErrors(t *testing.T) {
 	cases := []struct {
 		primary   storage.Storage
 		secondary storage.Storage
-		warnings  storage.Warnings
+		warning   error
 		err       error
 	}{
 		{
 			primary:   workingStorage,
 			secondary: errStorage{},
-			warnings:  storage.Warnings{errors.Wrap(errSelect, "secondary querier's Select")},
+			warning:   errors.Wrap(errSelect, "secondary querier's Select"),
 			err:       nil,
 		},
 		{
 			primary:   errStorage{},
 			secondary: workingStorage,
-			warnings:  nil,
-			err:       errSelect,
+			warning:   nil,
+			err:       errors.Wrap(errSelect, "primary querier's Select"),
 		},
 	}
 
@@ -164,8 +163,16 @@ func TestFanoutErrors(t *testing.T) {
 
 		matcher := labels.MustNewMatcher(labels.MatchEqual, "a", "b")
 		ss, warnings, err := querier.Select(true, nil, matcher)
-		testutil.Equals(t, tc.err, err)
-		testutil.Equals(t, tc.warnings, warnings)
+		if tc.err != nil {
+			testutil.NotOk(t, err)
+			testutil.Equals(t, tc.err.Error(), err.Error())
+		}
+
+		if tc.warning != nil {
+			testutil.Assert(t, len(warnings) > 0, "warnings expected")
+			testutil.NotOk(t, warnings[0])
+			testutil.Equals(t, tc.warning.Error(), warnings[0].Error())
+		}
 
 		// Only test series iteration if there are no errors.
 		if err != nil {

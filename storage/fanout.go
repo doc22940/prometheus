@@ -272,7 +272,8 @@ func NewMergeChunkQuerier(primary ChunkQuerier, secondaries []ChunkQuerier, merg
 // NOTE: mergeGenericQuerier selects always return series sorted no matter if sorting was not required from caller.
 func (q *mergeGenericQuerier) Select(_ bool, hints *SelectHints, matchers ...*labels.Matcher) (genericSeriesSet, Warnings, error) {
 	var (
-		seriesSets = make([]genericSeriesSet, 0, len(q.secondaries))
+		seriesSets = make([]genericSeriesSet, 0, len(q.secondaries)+1)
+		queries    = append([]genericQuerier{q.primary}, q.secondaries...)
 		warnings   Warnings
 		priErr     error
 		wg         sync.WaitGroup
@@ -286,14 +287,7 @@ func (q *mergeGenericQuerier) Select(_ bool, hints *SelectHints, matchers ...*la
 	}
 	resultChan := make(chan *queryResult)
 
-	wg.Add(1)
-	go func() {
-		// We need to sort for newGenericMergeSeriesSet to work.
-		set, wrn, err := q.primary.Select(true, hints, matchers...)
-		resultChan <- &queryResult{q: q, set: set, wrn: wrn, err: err}
-		wg.Done()
-	}()
-	for _, q := range q.secondaries {
+	for _, q := range queries {
 		wg.Add(1)
 		go func(q genericQuerier) {
 			// We need to sort for newGenericMergeSeriesSet to work.
@@ -334,9 +328,12 @@ func (q *mergeGenericQuerier) Select(_ bool, hints *SelectHints, matchers ...*la
 
 // LabelValues returns all potential values for a label name.
 func (q *mergeGenericQuerier) LabelValues(name string) ([]string, Warnings, error) {
-	var results [][]string
-	var warnings Warnings
-	for _, querier := range q.secondaries {
+	var (
+		results  [][]string
+		warnings Warnings
+		queries  = append([]genericQuerier{q.primary}, q.secondaries...)
+	)
+	for _, querier := range queries {
 		values, wrn, err := querier.LabelValues(name)
 		if wrn != nil {
 			warnings = append(warnings, wrn...)
@@ -401,9 +398,13 @@ func mergeTwoStringSlices(a, b []string) []string {
 
 // LabelNames returns all the unique label names present in the block in sorted order.
 func (q *mergeGenericQuerier) LabelNames() ([]string, Warnings, error) {
-	labelNamesMap := make(map[string]struct{})
-	var warnings Warnings
-	for _, querier := range q.secondaries {
+	var (
+		labelNamesMap = make(map[string]struct{})
+		warnings      Warnings
+		queries       = append([]genericQuerier{q.primary}, q.secondaries...)
+	)
+
+	for _, querier := range queries {
 		names, wrn, err := querier.LabelNames()
 		if wrn != nil {
 			warnings = append(warnings, wrn...)
